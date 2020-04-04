@@ -82,7 +82,7 @@ class FreelingConan(ConanFile):
 
     def package(self):
         cmake = self._configure_cmake()
-        #cmake.install()
+        cmake.install()
 
     def package_info(self):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
