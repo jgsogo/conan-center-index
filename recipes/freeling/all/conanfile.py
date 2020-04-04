@@ -16,11 +16,11 @@ class FreelingConan(ConanFile):
     homepage = "http://nlp.lsi.upc.edu/freeling/"
     license = "GNU Affero General Public License"
     topics = ("nlp", )
-    exports_sources = ["CMakeLists.txt"]
+    exports_sources = ["CMakeLists.txt", "patches/**"]
     generators = "cmake", "cmake_find_package"
     settings = "os", "arch", "compiler", "build_type"
     options = {
-        "shared": [True, False],
+        # "shared": [True, False],
         "traces": [True, False],
         "warnings": [True, False],
         "xpressive": [True, False],
@@ -31,7 +31,7 @@ class FreelingConan(ConanFile):
         "perl_api": [True, False],
     }
     default_options = {
-        'shared': False,
+        # 'shared': True,
         'traces': False,
         'warnings': True,
         'xpressive': False,
@@ -51,12 +51,16 @@ class FreelingConan(ConanFile):
         self.requires.add("icu/64.2")
 
     def configure(self):
-        if self.options.java_api or self.options.python2_api or self.options.python3_api:
+        if self.options.java_api or self.options.python2_api or self.options.python3_api or self.options.perl_api:
             raise ConanInvalidConfiguration("To compile the APIs it requires SWIG (not available in Conan Center)")
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
         os.rename('{0}-{1}'.format(self.name, self.version), self._source_subfolder)
+
+    def _patch_sources(self):
+        for patch in self.conan_data["patches"][self.version]:
+            tools.patch(**patch)
 
     def _configure_cmake(self):
         cmake = CMake(self)
@@ -72,6 +76,7 @@ class FreelingConan(ConanFile):
         return cmake
 
     def build(self):
+        self._patch_sources()
         cmake = self._configure_cmake()
         cmake.build()
 

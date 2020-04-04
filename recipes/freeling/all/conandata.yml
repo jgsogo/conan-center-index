@@ -1,5 +1,8 @@
 sources:
-    "4.1":
-      url: "https://github.com/TALP-UPC/FreeLing/archive/4.1.tar.gz"
-      sha256: "ccb3322db6851075c9419bb5e472aa6b2e32cc7e9fa01981cff49ea3b212247e"
-  
+  "4.1":
+    url: "https://github.com/TALP-UPC/FreeLing/archive/4.1.tar.gz"
+    sha256: "ccb3322db6851075c9419bb5e472aa6b2e32cc7e9fa01981cff49ea3b212247e"
+patches:
+  "4.1":
+    - patch_file: "patches/4.1-use-targets.patch"
+      base_path: "source_subfolder"
