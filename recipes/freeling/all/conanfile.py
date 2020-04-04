@@ -40,7 +40,7 @@ class FreelingConan(ConanFile):
         'python2_api': False,
         'python3_api': False,
         'perl_api': False,
-        'boost:disable_icu': False,
+        'boost:icu': True,
     }
 
     _source_subfolder = "source_subfolder"
