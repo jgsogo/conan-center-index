@@ -1,6 +1,7 @@
 import os
 from conans import ConanFile, tools
 from conans.errors import ConanInvalidConfiguration
+from jinja2 import Template
 
 
 class AndroidNDK(ConanFile):
@@ -12,6 +13,7 @@ class AndroidNDK(ConanFile):
     topics = ("NDK", "android", "toolchain", "compiler")
     license = "Apache-2.0"
     settings = "os", "arch"
+    exports_sources = ["cmake"]
 
     @property
     def _source_subfolder(self):
@@ -70,8 +72,10 @@ class AndroidNDK(ConanFile):
         self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))
 
         # cmake: https://developer.android.com/ndk/guides/cmake#command-line
-        self.env_info.CMAKE_TOOLCHAIN_FILE = os.path.join(self.package_folder, "bin", "build", "cmake", "android.toolchain.cmake")
-        # TODO: Taking values from 'settings_target' I can write a 'cmake_wrapper' and impostate the call
+        if hasattr(self, 'settings_target'):
+            self.env_info.CMAKE_TOOLCHAIN_FILE = os.path.join(self.package_folder, "bin", "build", "cmake", "android.toolchain.cmake")
+
+            # TODO: Taking values from 'settings_target' I can write a 'cmake_wrapper' and impostate the call
 
         # Other build-systems: https://developer.android.com/ndk/guides/other_build_systems
         # Translate settings_target to triplet
