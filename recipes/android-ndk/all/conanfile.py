@@ -86,28 +86,37 @@ class AndroidNDK(ConanFile):
             minSdkVersion = self.settings_target.os.api_level
             
             def _clang_triplet(arch):
-                arch = {'armv7': 'armv7a',
-                        'armv8': 'aarch64',
-                        'x86': 'i686',
-                        'x86_64': 'x86_64'}.get(str(arch))
                 abi = 'androideabi' if arch == 'armv7' else 'android'
-                return '%s-linux-%s' % (arch, abi)
+                arch_triplet = {'armv7': 'armv7a',
+                                'armv8': 'aarch64',
+                                'x86': 'i686',
+                                'x86_64': 'x86_64'}.get(str(arch))
+                return '%s-linux-%s' % (arch_triplet, abi)
 
-            triplet = _clang_triplet(str(self.settings_target.arch))
-            self.env_info.TARGET = triplet
+            def _llvm_triplet(arch):
+                abi = 'androideabi' if arch == 'armv7' else 'android'
+                arch_triplet = {'armv7': 'arm',
+                                'armv8': 'aarch64',
+                                'x86': 'i686',
+                                'x86_64': 'x86_64'}.get(str(arch))
+                return '%s-linux-%s' % (arch_triplet, abi)
+
+            clang_triplet = _clang_triplet(str(self.settings_target.arch))
+            llvm_triplet = _llvm_triplet(str(self.settings_target.arch))
+            self.env_info.TARGET = llvm_triplet  # TODO: clang or llvm triplet?
 
             base_path = os.path.join(self.package_folder, "bin", "toolchains", "llvm", "prebuilt", host_tag, "bin")
-            self.env_info.CC = os.path.join(base_path, "{}{}-clang".format(triplet, minSdkVersion))
-            self.env_info.CXX = os.path.join(base_path, "{}{}-clang++".format(triplet, minSdkVersion))
-            #self.env_info.ADDR2LINE = os.path.join(base_path, "{}-addr2line".format(triplet))
-            self.env_info.AR = os.path.join(base_path, "{}-ar".format(triplet))
-            self.env_info.AS = os.path.join(base_path, "{}-as".format(triplet))
-            #self.env_info.ELFEDIT = os.path.join(base_path, "{}-elfedit".format(triplet))
-            self.env_info.LD = os.path.join(base_path, "{}-ld".format(triplet))
-            #self.env_info.NM = os.path.join(base_path, "{}-nm".format(triplet))
-            #self.env_info.OBJCOPY = os.path.join(base_path, "{}-objcopy".format(triplet))
-            #self.env_info.OBJDUMP = os.path.join(base_path, "{}-objdump".format(triplet))
-            self.env_info.RANLIB = os.path.join(base_path, "{}-ranlib".format(triplet))
-            #self.env_info.READELF = os.path.join(base_path, "{}-readelf".format(triplet))
-            self.env_info.STRIP = os.path.join(base_path, "{}-strip".format(triplet))
+            self.env_info.CC = os.path.join(base_path, "{}{}-clang".format(clang_triplet, minSdkVersion))
+            self.env_info.CXX = os.path.join(base_path, "{}{}-clang++".format(clang_triplet, minSdkVersion))
+            #self.env_info.ADDR2LINE = os.path.join(base_path, "{}-addr2line".format(llvm_triplet))
+            self.env_info.AR = os.path.join(base_path, "{}-ar".format(llvm_triplet))
+            self.env_info.AS = os.path.join(base_path, "{}-as".format(llvm_triplet))
+            #self.env_info.ELFEDIT = os.path.join(base_path, "{}-elfedit".format(llvm_triplet))
+            self.env_info.LD = os.path.join(base_path, "{}-ld".format(llvm_triplet))
+            #self.env_info.NM = os.path.join(base_path, "{}-nm".format(llvm_triplet))
+            #self.env_info.OBJCOPY = os.path.join(base_path, "{}-objcopy".format(llvm_triplet))
+            #self.env_info.OBJDUMP = os.path.join(base_path, "{}-objdump".format(llvm_triplet))
+            self.env_info.RANLIB = os.path.join(base_path, "{}-ranlib".format(llvm_triplet))
+            #self.env_info.READELF = os.path.join(base_path, "{}-readelf".format(llvm_triplet))
+            self.env_info.STRIP = os.path.join(base_path, "{}-strip".format(llvm_triplet))
 
