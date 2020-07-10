@@ -28,7 +28,7 @@ class AndroidNDK(ConanFile):
         os.rename(extracted_dir, self._source_subfolder)
 
     def package(self):
-        self.copy(pattern="*", dst=".", src=self._source_subfolder, keep_path=True, symlinks=True)
+        self.copy(pattern="*", dst="bin", src=self._source_subfolder, keep_path=True, symlinks=True)
         self.copy(pattern="*NOTICE", dst="licenses", src=self._source_subfolder)
         self.copy(pattern="*NOTICE.toolchain", dst="licenses", src=self._source_subfolder)
         self._fix_permissions()
@@ -37,7 +37,7 @@ class AndroidNDK(ConanFile):
     def _chmod_plus_x(filename):
         if os.name == 'posix':
             os.chmod(filename, os.stat(filename).st_mode | 0o111)
-            
+
     def _fix_permissions(self):
         if os.name != 'posix':
             return
@@ -64,3 +64,43 @@ class AndroidNDK(ConanFile):
                          sig == [0xCE, 0xFA, 0xED, 0xFE]:
                         self.output.info('chmod on Mach-O file: "%s"' % filename)
                         self._chmod_plus_x(filename)
+
+    def package_info(self):
+        # ndk-build: https://developer.android.com/ndk/guides/ndk-build
+        self.env_info.PATH.add(os.path.join(self.package_folder, 'bin'))
+
+        # cmake: https://developer.android.com/ndk/guides/cmake#command-line
+        self.env_info.CMAKE_TOOLCHAIN_FILE = os.path.join(self.package_folder, "bin", "build", "cmake", "android.toolchain.cmake")
+
+        # Other build-systems: https://developer.android.com/ndk/guides/other_build_systems
+        # Translate settings_target to triplet
+        if hasattr(self, 'settings_target'):
+            host_tag = {'Windows': 'windows-x86_64', 'Linux': 'linux-x86_64', 'Macos': 'darwin-x86_64'}.get(str(self.settings.os))
+            minSdkVersion = self.settings_target.os.api_level
+            
+            def _clang_triplet(arch):
+                arch = {'armv7': 'armv7a',
+                        'armv8': 'aarch64',
+                        'x86': 'i686',
+                        'x86_64': 'x86_64'}.get(str(arch))
+                abi = 'androideabi' if arch == 'armv7' else 'android'
+                return '%s-linux-%s' % (arch, abi)
+
+            triplet = _clang_triplet(str(self.settings_target.arch))
+            self.env_info.TARGET = triplet
+
+            base_path = os.path.join(self.package_folder, "bin", "toolchains", "llvm", "prebuilt", host_tag, "bin")
+            self.env_info.CC = os.path.join(base_path, "{}{}-clang".format(triplet, minSdkVersion))
+            self.env_info.CXX = os.path.join(base_path, "{}{}-clang++".format(triplet, minSdkVersion))
+            #self.env_info.ADDR2LINE = os.path.join(base_path, "{}-addr2line".format(triplet))
+            self.env_info.AR = os.path.join(base_path, "{}-ar".format(triplet))
+            self.env_info.AS = os.path.join(base_path, "{}-as".format(triplet))
+            #self.env_info.ELFEDIT = os.path.join(base_path, "{}-elfedit".format(triplet))
+            self.env_info.LD = os.path.join(base_path, "{}-ld".format(triplet))
+            #self.env_info.NM = os.path.join(base_path, "{}-nm".format(triplet))
+            #self.env_info.OBJCOPY = os.path.join(base_path, "{}-objcopy".format(triplet))
+            #self.env_info.OBJDUMP = os.path.join(base_path, "{}-objdump".format(triplet))
+            self.env_info.RANLIB = os.path.join(base_path, "{}-ranlib".format(triplet))
+            #self.env_info.READELF = os.path.join(base_path, "{}-readelf".format(triplet))
+            self.env_info.STRIP = os.path.join(base_path, "{}-strip".format(triplet))
+
