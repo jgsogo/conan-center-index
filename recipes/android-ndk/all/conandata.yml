@@ -1,0 +1,4 @@
+sources:
+    "r21":
+      url: https://android.googlesource.com/platform/ndk.git/+archive/27fb6666facf1a1d69489e5c5002ae42f8202bad.tar.gz
+      sha256: 945ac39f14273be742c8a060af100182e38920f641e5d8fa16699e74a09e9850
