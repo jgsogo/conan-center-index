@@ -1,21 +1,66 @@
 import os
 from conans import ConanFile, tools
+from conans.errors import ConanInvalidConfiguration
 
 
 class AndroidNDK(ConanFile):
     name = "android-ndk"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://developer.android.com/ndk/index.html"
-    description = "The Android NDK is a toolset that lets you implement parts of your app in"
+    description = "The Android NDK is a toolset that lets you implement parts of your app in"\
                   " native code, using languages such as C and C++"
     topics = ("NDK", "android", "toolchain", "compiler")
     license = "Apache-2.0"
+    settings = "os", "arch"
 
     @property
     def _source_subfolder(self):
         return "source_subfolder"
 
-    def source(self):
-        tools.get(**self.conan_data["sources"][self.version])
+    def configure(self):
+        if self.settings.arch != 'x86_64':
+            raise ConanInvalidConfiguration("No binaries available for other than 'x86_64' architectures")
+
+    def build(self):
+        tarballs = self.conan_data["sources"][self.version]
+        tools.get(**tarballs[str(self.settings.os)])
         extracted_dir = self.name + "-" + self.version
         os.rename(extracted_dir, self._source_subfolder)
+
+    def package(self):
+        self.copy(pattern="*", dst=".", src=self._source_subfolder, keep_path=True, symlinks=True)
+        self.copy(pattern="*NOTICE", dst="licenses", src=self._source_subfolder)
+        self.copy(pattern="*NOTICE.toolchain", dst="licenses", src=self._source_subfolder)
+        self._fix_permissions()
+
+    @staticmethod
+    def _chmod_plus_x(filename):
+        if os.name == 'posix':
+            os.chmod(filename, os.stat(filename).st_mode | 0o111)
+            
+    def _fix_permissions(self):
+        if os.name != 'posix':
+            return
+        for root, _, files in os.walk(self.package_folder):
+            for filename in files:
+                filename = os.path.join(root, filename)
+                with open(filename, 'rb') as f:
+                    sig = f.read(4)
+                    if type(sig) is str:
+                        sig = [ord(s) for s in sig]
+                    else:
+                        sig = [s for s in sig]
+                    if len(sig) > 2 and sig[0] == 0x23 and sig[1] == 0x21:
+                        self.output.info('chmod on script file: "%s"' % filename)
+                        self._chmod_plus_x(filename)
+                    elif sig == [0x7F, 0x45, 0x4C, 0x46]:
+                        self.output.info('chmod on ELF file: "%s"' % filename)
+                        self._chmod_plus_x(filename)
+                    elif sig == [0xCA, 0xFE, 0xBA, 0xBE] or \
+                         sig == [0xBE, 0xBA, 0xFE, 0xCA] or \
+                         sig == [0xFE, 0xED, 0xFA, 0xCF] or \
+                         sig == [0xCF, 0xFA, 0xED, 0xFE] or \
+                         sig == [0xFE, 0xEF, 0xFA, 0xCE] or \
+                         sig == [0xCE, 0xFA, 0xED, 0xFE]:
+                        self.output.info('chmod on Mach-O file: "%s"' % filename)
+                        self._chmod_plus_x(filename)
