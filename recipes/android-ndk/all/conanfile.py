@@ -67,7 +67,7 @@ class AndroidNDK(ConanFile):
 
     def package_info(self):
         # ndk-build: https://developer.android.com/ndk/guides/ndk-build
-        self.env_info.PATH.add(os.path.join(self.package_folder, 'bin'))
+        self.env_info.PATH.append(os.path.join(self.package_folder, 'bin'))
 
         # cmake: https://developer.android.com/ndk/guides/cmake#command-line
         self.env_info.CMAKE_TOOLCHAIN_FILE = os.path.join(self.package_folder, "bin", "build", "cmake", "android.toolchain.cmake")
