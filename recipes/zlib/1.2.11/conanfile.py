@@ -39,7 +39,7 @@ class ZlibConan(ConanFile):
 
     def build(self):
         if self.settings.os == "Linux" and self.settings.build_type == "Release":
-            raise Exception("This recipe fails here ¯\_(ツ)_/¯")
+            raise Exception("This recipe fails here.")
 
         self._build_zlib()
         if self.options.minizip:
