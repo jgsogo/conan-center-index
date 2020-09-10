@@ -38,9 +38,6 @@ class ZlibConan(ConanFile):
             os.chmod(configure_file, st.st_mode | stat.S_IEXEC)
 
     def build(self):
-        if self.settings.os == "Linux" and self.settings.build_type == "Release":
-            raise Exception("This recipe fails here.")
-
         self._build_zlib()
         if self.options.minizip:
             self._build_minizip()

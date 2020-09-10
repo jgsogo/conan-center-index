@@ -9,6 +9,9 @@ class TestZlibConan(ConanFile):
         del self.settings.compiler.libcxx
 
     def build(self):
+        if self.settings.os == "Linux" and self.settings.build_type == "Release":
+            raise Exception("This recipe fails here.")
+
         cmake = CMake(self)
         cmake.definitions["WITH_MINIZIP"] = self.options["zlib"].minizip
         cmake.configure()
